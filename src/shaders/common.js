@@ -216,7 +216,8 @@ vec4 renderClouds(vec3 camPos, vec3 rd, vec3 atmoCol) {
     col += uMoonColor * 0.16 * exp(-d * dens * 1.4) * (0.55 + 0.9 * phase);
   }
   vec3 amb = skyAmbient();
-  col += amb * (1.05 - 0.55 * d * min(dens, 1.5));
+  amb = mix(amb, vec3(dot(amb, vec3(0.2126, 0.7152, 0.0722))), 0.55);
+  col += amb * (1.05 - 0.6 * d * min(dens, 1.6));
   col += vec3(0.75, 0.8, 1.0) * uLightning * (1.5 + 3.0 * d);
   float a = 1.0 - exp(-d * dens * 3.5);
   // Uzaklıkla atmosferik perspektif
@@ -275,9 +276,9 @@ vec3 starLayer(vec3 d, float scale, float density, float boost) {
   vec3 sp = id + 0.25 + 0.5 * hash33(id + 17.31);
   vec3 dv = sp / length(sp) - d;
   float dist = length(dv);
-  float px = max(uPixelAngle, 1e-5) * 0.8;
+  float px = max(uPixelAngle, 1e-5) * 0.7;
   float core = exp(-dist * dist / (px * px));
-  float mag = pow(h.y, 14.0) * 28.0 + 0.12 * h.y;
+  float mag = pow(h.y, 16.0) * 30.0 + 0.02 * h.y;
   float tw = 0.75 + 0.25 * sin(uTime * (4.0 + 6.0 * h.z) + h.x * 90.0);
   return starColor(h.z) * core * mag * tw * boost;
 }
@@ -298,7 +299,7 @@ vec3 milkyWay(vec3 e) {
 }
 vec3 nightSky(vec3 rd) {
   vec3 e = uWorldToEq * rd;
-  vec3 s = starLayer(e, 180.0, 0.35, 1.0) + starLayer(e, 420.0, 0.22, 0.45) + starLayer(e, 900.0, 0.12, 0.2);
-  return s * 0.08 + milkyWay(e) * 0.0045;
+  vec3 s = starLayer(e, 160.0, 0.14, 1.0) + starLayer(e, 380.0, 0.05, 0.4) + starLayer(e, 800.0, 0.025, 0.25);
+  return s * 0.004 + milkyWay(e) * 0.011;
 }
 `;

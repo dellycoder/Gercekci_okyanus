@@ -338,7 +338,7 @@ export function createBuoy(shared) {
     mesh, uniforms, position: new THREE.Vector2(22, -48),
     update(dt, height, slope, time, night) {
       const k = 1 - Math.exp(-dt * 3.5);
-      state.y += (height - 0.25 - state.y) * k;
+      state.y += (height + 0.05 - state.y) * k;
       state.tiltX += (Math.atan(slope[1]) * 0.8 - state.tiltX) * (1 - Math.exp(-dt * 2.0));
       state.tiltZ += (-Math.atan(slope[0]) * 0.8 - state.tiltZ) * (1 - Math.exp(-dt * 2.0));
       state.yaw += Math.sin(time * 0.13) * dt * 0.05;

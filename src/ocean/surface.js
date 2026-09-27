@@ -130,8 +130,10 @@ float ggx(vec3 N, vec3 V, vec3 L, float a, float NV) {
   return D * G * F / (4.0 * NV);
 }
 
+uniform float uWindDir;
 float foamPattern(vec2 uv) {
-  vec2 p = uv * 0.9;
+  float cw = cos(uWindDir), sw = sin(uWindDir);
+  vec2 p = vec2(cw * uv.x + sw * uv.y, -sw * uv.x + cw * uv.y) * vec2(0.45, 1.3);
   float t = uTime * 0.05;
   float a = fbm4(p + vec2(t, -t * 0.7));
   float b = fbm4(p * 2.7 - vec2(t * 1.3, t * 0.4) + a * 1.5);
@@ -147,7 +149,7 @@ void main() {
 
   vec2 uv0 = vUV / uLengths.x, uv1 = vUV / uLengths.y, uv2 = vUV / uLengths.z;
   vec4 der = texture(uDeriv0, uv0) + texture(uDeriv1, uv1) + texture(uDeriv2, uv2);
-  vec2 slope = der.xy / max(1.0 + der.zw, vec2(0.25));
+  vec2 slope = der.xy / max(1.0 + der.zw, vec2(0.5));
   vec3 N = normalize(vec3(-slope.x, 1.0, -slope.y));
   float foamRaw = texture(uDisp0, uv0).a * 0.9 + texture(uDisp1, uv1).a + texture(uDisp2, uv2).a * 0.5;
 
@@ -168,7 +170,7 @@ void main() {
     vec3 R = reflect(-V, N);
     R.y = abs(R.y) + 0.002;
     R = normalize(R);
-    vec3 refl = sampleSky(uSkyFull, R, alpha * 7.0 + far * 1.0);
+    vec3 refl = sampleSky(uSkyFull, R, alpha * 7.0 + far * 1.0) + uNightAmbient * 1.5;
 
     float shadow = cloudShadow(wp);
     vec3 sunE = uSunColor * shadow;
@@ -193,9 +195,9 @@ void main() {
     // Köpük
     float fp = foamPattern(vUV);
     float foam = clamp(foamRaw * uFoamStrength, 0.0, 2.0);
-    float foamMask = smoothstep(0.15, 1.0, foam * (0.35 + 1.1 * fp)) ;
-    foamMask = max(foamMask, smoothstep(0.9, 1.6, foam) * 0.9);
-    vec3 foamCol = (sunE * (0.25 + 0.75 * max(dot(N, L), 0.0)) * 0.85 / PI + uMoonColor * 0.25 + amb * 0.9);
+    float foamMask = smoothstep(0.25, 0.95, foam * (0.45 + 0.9 * fp));
+    foamMask = max(foamMask, smoothstep(1.0, 1.8, foam) * 0.95);
+    vec3 foamCol = sunE * (0.35 + 0.65 * max(dot(N, L), 0.0)) * 0.9 / PI + uMoonColor * 0.3 + amb * 1.5;
     col = mix(col, foamCol, foamMask * 0.95);
 
     // Atmosferik perspektif
@@ -242,6 +244,7 @@ export function createOceanSurface(shared, sim, quality) {
     uSSS: { value: 1.0 },
     uFoamStrength: { value: 1.0 },
     uWind: { value: 9 },
+    uWindDir: { value: 0 },
     uReflectivity: { value: 1.0 },
     uSpecular: { value: 1.0 },
   };
@@ -268,6 +271,7 @@ export function createOceanSurface(shared, sim, quality) {
       const alt = Math.abs(camera.position.y);
       uniforms.uGridScale.value = Math.max(1, alt / 6);
       uniforms.uWind.value = simulation.params.windSpeed;
+      uniforms.uWindDir.value = simulation.params.windDir * Math.PI / 180;
     },
   };
 }

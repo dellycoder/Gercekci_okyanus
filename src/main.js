@@ -32,7 +32,7 @@ const WEATHER = {
   'Sakin': { fetch: 20, windSpeed: 3.5, swell: 0.35, choppiness: 0.7, cloudCoverage: 0.15, cloudDensity: 0.8, rain: 0, lightning: false, haze: 0.8, visibility: 60 },
   'Açık ve esintili': { fetch: 60, windSpeed: 8, swell: 0.5, choppiness: 0.9, cloudCoverage: 0.32, cloudDensity: 1.0, rain: 0, lightning: false, haze: 1.0, visibility: 45 },
   'Rüzgarlı': { fetch: 150, windSpeed: 14, swell: 0.7, choppiness: 1.0, cloudCoverage: 0.55, cloudDensity: 1.3, rain: 0, lightning: false, haze: 1.6, visibility: 30 },
-  'Fırtına': { fetch: 500, windSpeed: 23, swell: 1.0, choppiness: 1.05, cloudCoverage: 0.97, cloudDensity: 2.6, rain: 0.85, lightning: true, haze: 4.0, visibility: 7 },
+  'Fırtına': { fetch: 500, windSpeed: 23, swell: 1.0, choppiness: 0.9, cloudCoverage: 0.97, cloudDensity: 2.6, rain: 0.85, lightning: true, haze: 4.0, visibility: 7 },
   'Sisli': { fetch: 30, windSpeed: 4, swell: 0.4, choppiness: 0.8, cloudCoverage: 0.6, cloudDensity: 1.2, rain: 0, lightning: false, haze: 8.0, visibility: 2.5 },
 };
 
@@ -48,7 +48,7 @@ const DEFAULTS = {
   starBrightness: 1.0, sunDiscScale: 1.0,
   windSpeed: 8, windDir: 30, fetch: 60, swell: 0.5, swellDir: 70, choppiness: 0.9, amplitude: 1.0,
   spread: 0.12, foamAmount: 1.0, foamDecay: 0.35,
-  deepColor: '#0a2c47', scatterColor: '#0f8a7a', sss: 1.0, clarity: 1.0, reflectivity: 1.0,
+  deepColor: '#0a2c47', scatterColor: '#137c96', sss: 1.0, clarity: 1.0, reflectivity: 1.0,
   godRays: 1.0, caustics: 1.0, seabedDepth: 26,
   rain: 0, lightning: false,
   quality: 'Yüksek', renderScale: 1.0, msaa: 4, bloom: 0.045, exposure: 1.0, vignette: 0.28,
@@ -535,7 +535,7 @@ function frame(now) {
   shared.uCloudOffset.value.x -= Math.cos(wdir) * cloudSpd * dt;
   shared.uCloudOffset.value.y -= Math.sin(wdir) * cloudSpd * dt;
   const night = 1 - smoothstep(-0.14, 0.02, sd[1]);
-  shared.uNightAmbient.value.set(0.00022, 0.00034, 0.0007).multiplyScalar(1 + 2 * illum * moonVis);
+  shared.uNightAmbient.value.set(0.0007, 0.001, 0.002).multiplyScalar(1 + 2 * illum * moonVis);
 
   // Şimşek
   if (settings.lightning && started) {
@@ -660,4 +660,4 @@ $('start').addEventListener('click', () => {
 });
 
 // Test ve hata ayıklama için
-window.__ocean = { settings, controls, sim, camera, shared, applyAll, applyGraphics, MODES };
+window.__ocean = { parseDate, sky, ocean, settings, controls, sim, camera, shared, applyAll, applyGraphics, MODES };

@@ -24,7 +24,13 @@ layout(location = 0) out vec4 oAtmo;
 layout(location = 1) out vec4 oFull;
 void main() {
   vec3 rd = skyUVToDir(vUv);
-  vec3 atmo = atmosphere(rd, 2.0, uSunDir, uSunI, uMoonDir, uMoonI);
+  // Ufkun altı: gezegene çarpan kısa ışınlar yerine ufuk rengini kullan (uzak okyanus/sis için)
+  vec3 ra = normalize(vec3(rd.x, max(rd.y, 0.0015), rd.z));
+  vec3 atmo = atmosphere(ra, 2.0, uSunDir, uSunI, uMoonDir, uMoonI);
+  // Kapalı havada gökyüzü griye döner ve kararır
+  float oc = smoothstep(0.55, 1.0, uCloudCoverage) * min(uCloudDensity, 2.0) * 0.5;
+  float al = dot(atmo, vec3(0.2126, 0.7152, 0.0722));
+  atmo = mix(atmo, vec3(al) * vec3(0.92, 0.96, 1.0) * 0.55, clamp(oc, 0.0, 0.9));
   atmo += vec3(0.6, 0.65, 0.8) * uLightning * 0.4;
   oAtmo = vec4(atmo, 1.0);
   vec4 cl = renderClouds(vec3(uCamPos.x, 2.0, uCamPos.z), rd, atmo);
@@ -83,7 +89,7 @@ vec3 skyColor(vec3 rd) {
   float vis = smoothstep(-0.02, 0.12, rd.y);
   // Yıldızlar yalnızca karanlık gökyüzünde görünür
   float lum = dot(atmo, vec3(0.2126, 0.7152, 0.0722));
-  float starVis = exp(-lum * 90.0) * vis;
+  float starVis = exp(-lum * 250.0) * vis;
   vec3 col = atmo + uNightAmbient * 0.6;
   col += nightSky(rd) * starVis * uStarBrightness;
   // Güneş diski (kenar kararması)
