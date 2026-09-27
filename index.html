@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Gerçekçi Okyanus</title>
+  <meta name="description" content="Gerçek zamanlı, FFT dalga simülasyonlu, fiziksel gökyüzüne sahip ultra gerçekçi okyanus.">
+  <meta name="theme-color" content="#04121f">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='22' r='10' fill='%23ffc56b'/%3E%3Cpath d='M0 40c8-6 16-6 24 0s16 6 24 0 12-5 16-3v27H0z' fill='%231a6fa3'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="style.css">
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "./vendor/three.module.js",
+      "lil-gui": "./vendor/lil-gui.esm.js"
+    }
+  }
+  </script>
+</head>
+<body>
+  <canvas id="scene"></canvas>
+
+  <div id="hud" class="ui">
+    <div class="hud-top">
+      <span id="hud-mode" class="badge">Yüzme</span>
+      <span id="hud-time" class="clock">--:--</span>
+    </div>
+    <div id="hud-date" class="muted"></div>
+    <div id="hud-sun"></div>
+    <div id="hud-moon"></div>
+    <div id="hud-waves"></div>
+    <div id="hud-depth"></div>
+    <div id="hud-fps" class="muted"></div>
+  </div>
+
+  <div id="bar" class="ui">
+    <div class="group modes">
+      <button data-mode="swim" title="Yüzme modu (1)">🏊 Yüzme</button>
+      <button data-mode="aerial" title="Havadan izleme (2)">🚁 Havadan</button>
+      <button data-mode="cinematic" title="Sinematik (3)">🎬 Sinematik</button>
+    </div>
+    <div class="group time">
+      <span class="icon" aria-hidden="true">☀</span>
+      <input id="time-slider" type="range" min="0" max="24" step="0.01" value="12" aria-label="Günün saati">
+      <span class="icon" aria-hidden="true">☾</span>
+    </div>
+    <div class="group speeds">
+      <button data-speed="0" title="Zamanı durdur">⏸</button>
+      <button data-speed="1" title="Gerçek zaman">1x</button>
+      <button data-speed="300" title="300 kat hızlı">300x</button>
+      <button data-speed="3600" title="3600 kat hızlı">3600x</button>
+    </div>
+    <div class="group tools">
+      <button id="btn-shot" title="Ekran görüntüsü (P)">📷</button>
+      <button id="btn-shot-hi" title="2 kat çözünürlükte ekran görüntüsü">📷 2x</button>
+      <button id="btn-full" title="Tam ekran (F)">⛶</button>
+      <button id="btn-help" title="Yardım">?</button>
+    </div>
+  </div>
+
+  <div id="touch" class="ui">
+    <div id="joystick"><div id="joystick-knob"></div></div>
+    <div class="vbtns">
+      <button id="btn-up" aria-label="Yukarı">▲</button>
+      <button id="btn-down" aria-label="Aşağı / dal">▼</button>
+    </div>
+  </div>
+
+  <div id="help" class="panel" hidden>
+    <h2>Kontroller</h2>
+    <table>
+      <tr><td>Fare sürükle</td><td>Etrafa bak (çift tık: fare kilidi)</td></tr>
+      <tr><td>W A S D / ok tuşları</td><td>Hareket</td></tr>
+      <tr><td>Boşluk / E</td><td>Yukarı · yüzeye çık</td></tr>
+      <tr><td>C / Q / Ctrl</td><td>Aşağı · dal</td></tr>
+      <tr><td>Shift</td><td>Hızlı</td></tr>
+      <tr><td>Fare tekerleği</td><td>Havadan: irtifa · Yüzme: hız</td></tr>
+      <tr><td>1 · 2 · 3</td><td>Yüzme · Havadan · Sinematik</td></tr>
+      <tr><td>T</td><td>Zaman akış hızını değiştir</td></tr>
+      <tr><td>[ ]</td><td>Saati 30 dk geri / ileri al</td></tr>
+      <tr><td>H</td><td>Arayüzü gizle / göster</td></tr>
+      <tr><td>P</td><td>Ekran görüntüsü</td></tr>
+      <tr><td>F</td><td>Tam ekran</td></tr>
+    </table>
+    <p class="muted">Güneş ve Ay konumları seçilen konum, tarih ve saate göre gerçek astronomik hesapla belirlenir. Ay'ın evresi de bu hesaptan gelir.</p>
+    <button id="help-close">Kapat</button>
+  </div>
+
+  <div id="intro">
+    <div class="intro-card">
+      <h1>Gerçekçi Okyanus</h1>
+      <p class="lead">GPU'da FFT ile hesaplanan dalgalar, fiziksel atmosfer, gerçek Güneş ve Ay konumları, yüzme ve havadan izleme.</p>
+      <ul>
+        <li><b>Yüzme:</b> dalgalarla birlikte yüksel, <kbd>C</kbd> ile dal, <kbd>Boşluk</kbd> ile yüzeye çık</li>
+        <li><b>Havadan:</b> <kbd>WASD</kbd> ile uç, tekerlekle irtifa değiştir</li>
+        <li><b>Sinematik:</b> otomatik kamera turu</li>
+        <li>Sağdaki panelden saat, hava, dalga ve grafik ayarları</li>
+      </ul>
+      <button id="start" disabled>Başla</button>
+      <div id="loading" class="muted">Gölgelendiriciler derleniyor…</div>
+    </div>
+  </div>
+
+  <div id="error" class="panel" hidden>
+    <h2>WebGL2 desteklenmiyor</h2>
+    <p>Bu deneyim WebGL2 ve kayan noktalı doku desteği gerektirir. Lütfen güncel bir Chrome, Edge, Firefox veya Safari kullanın.</p>
+  </div>
+
+  <div id="toast"></div>
+
+  <script type="module" src="src/main.js"></script>
+</body>
+</html>
